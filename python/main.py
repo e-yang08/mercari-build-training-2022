@@ -70,7 +70,6 @@ def get_item():
         items = json.load(file)
     return items
 
-
 @app.get("/image/{items_image}")
 async def get_image(items_image):
     # Create image path
