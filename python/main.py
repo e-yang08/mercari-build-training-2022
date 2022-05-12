@@ -30,7 +30,7 @@ json_file = pathlib.Path(__file__).parent.resolve() / "items.json"
 def initialize():
     json_file.touch(exist_ok=True)
     logger.info("Created items.json if not initially exist")
-
+    return None
 
 @app.get("/")
 def root():
