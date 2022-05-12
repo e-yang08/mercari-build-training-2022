@@ -21,16 +21,20 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-json_file = pathlib.Path(__file__).parent.resolve() / "items.json"
+json_file = str(pathlib.Path(__file__).parent.resolve() / "items.json")
 
 # ----endpoints--------------------------
 
 
 @app.on_event("startup")
 def initialize():
-    json_file.touch(exist_ok=True)
+    if not os.path.exists(json_file):
+        # open(json_file, 'w').close()
+        with open(json_file, "w", encoding='utf-8') as file:
+            json.dump({"items": []}, file, indent=4)
     logger.info("Created items.json if not initially exist")
     return None
+
 
 @app.get("/")
 def root():
@@ -42,7 +46,7 @@ def add_item(name: str = Form(...), category: str = Form(...)):
     logger.info(f"Receive item: {name} in {category}")
 
     # open the json file to record new item defined above
-    with open("items.json", "r+", encoding='utf-8') as file:
+    with open(json_file, "r+", encoding='utf-8') as file:
         # load the existing data
         file_data = json.load(file)
 
@@ -66,9 +70,10 @@ def add_item(name: str = Form(...), category: str = Form(...)):
 
 @app.get("/items")
 def get_item():
-    with open("items.json", "r", encoding='utf-8') as file:
+    with open(json_file, "r", encoding='utf-8') as file:
         items = json.load(file)
     return items
+
 
 @app.get("/image/{items_image}")
 async def get_image(items_image):
