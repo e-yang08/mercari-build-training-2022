@@ -8,6 +8,8 @@ from fastapi.middleware.cors import CORSMiddleware
 import json
 import sqlite3
 
+
+# ----config----------------------------
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
@@ -26,6 +28,7 @@ db_file = str(pathlib.Path(os.path.dirname(__file__)
                            ).parent.resolve() / ".." / "db" / "items.db")
 sqlite_file = str(pathlib.Path(os.path.dirname(__file__)
                                ).parent.resolve() / ".." / "db" / "mercari.sqlite3")
+
 
 # ----endpoints--------------------------
 
