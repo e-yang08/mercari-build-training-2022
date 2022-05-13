@@ -12,12 +12,12 @@ app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
 images = pathlib.Path(__file__).parent.resolve() / "image"
-origins = [ os.environ.get('FRONT_URL', 'http://localhost:3000') ]
+origins = [os.environ.get('FRONT_URL', 'http://localhost:3000')]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=False,
-    allow_methods=["GET","POST","PUT","DELETE"],
+    allow_methods=["GET", "POST", "PUT", "DELETE"],
     allow_headers=["*"],
 )
 
@@ -55,7 +55,8 @@ def initialize():
 
 @app.get("/")
 def root():
-    return {"message": "Hello, world!"}
+    return {"message": "Welcome to Mercari Items Database"}
+
 
 @app.post("/items")
 def add_item(id: int = Form(...), name: str = Form(...), category: str = Form(...)):
@@ -65,7 +66,7 @@ def add_item(id: int = Form(...), name: str = Form(...), category: str = Form(..
     cur = con.cursor()
 
     # insert item
-    cur.execute("INSERT INTO items(id, name, category) VALUES(?,?,?)",
+    cur.execute("INSERT INTO items VALUES(?,?,?)",
                 (id, name, category))
     con.commit()
     con.close()
@@ -79,9 +80,12 @@ def get_item():
     con = sqlite3.connect(sqlite_file)
     con.row_factory = sqlite3.Row
     cur = con.cursor()
+
+    # select all items
     cur.execute("SELECT * from items")
     items_json = {"items": cur.fetchall()}
     con.close()
+
     return items_json
 
 
@@ -91,13 +95,15 @@ async def get_image(items_image):
     image = images / items_image
 
     if not items_image.endswith(".jpg"):
-        raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
+        raise HTTPException(
+            status_code=400, detail="Image path does not end with .jpg")
 
     if not image.exists():
         logger.debug(f"Image not found: {image}")
         image = images / "default.jpg"
 
     return FileResponse(image)
+
 
 @app.on_event("shutdown")
 def close():
