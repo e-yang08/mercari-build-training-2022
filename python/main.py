@@ -5,7 +5,6 @@ from fastapi import FastAPI, Form, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
-import json
 import sqlite3
 import hashlib
 
@@ -32,8 +31,6 @@ sqlite_file = str(pathlib.Path(os.path.dirname(__file__)
 
 
 # ----endpoints--------------------------
-
-
 @app.on_event("startup")
 def initialize():
     if not os.path.exists(db_file):
@@ -116,6 +113,27 @@ def search_item(keyword: str):  # query parameter
     else:
         message = {"items": lst}
     return message
+
+
+@app.get("/items/{items_id}")
+def get_item_by_id(items_id):
+
+    logger.info(f"Search item with ID: {items_id}")
+
+    con = sqlite3.connect(sqlite_file)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    # select item matching keyword
+    cur.execute("SELECT * from items WHERE id=(?)", (items_id,))
+    lst = cur.fetchall()
+    con.close()
+    if lst == []:
+        message = {"message": "No matching item"}
+    else:
+        message = {"items": lst}
+    return message
+
 
 @app.get("/image/{items_image}")
 async def get_image(items_image):
