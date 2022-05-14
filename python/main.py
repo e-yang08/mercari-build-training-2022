@@ -7,12 +7,13 @@ from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
 import json
 import sqlite3
+import hashlib
 
 # ----config----------------------------
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
-images = pathlib.Path(__file__).parent.resolve() / "image"
+images = pathlib.Path(__file__).parent.resolve() / "images"
 origins = [os.environ.get('FRONT_URL', 'http://localhost:3000')]
 app.add_middleware(
     CORSMiddleware,
@@ -60,15 +61,21 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...)):
+def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
+
+    if not image.endswith(".jpg"):
+        raise HTTPException(
+            status_code=400, detail="Image is not in .jpg format")
+
+    hashes = hashlib.sha256(image[:-4].encode('utf-8')).hexdigest() + '.jpg'
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
     # insert item
-    cur.execute("INSERT INTO items(name, category) VALUES(?,?)",
-                (name, category))
+    cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
+                (name, category, hashes))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
