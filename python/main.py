@@ -6,6 +6,7 @@ from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
 import json
+import sqlite3
 
 # ----config----------------------------
 app = FastAPI()
@@ -22,17 +23,34 @@ app.add_middleware(
 )
 
 json_file = str(pathlib.Path(__file__).parent.resolve() / "items.json")
+db_file = str(pathlib.Path(os.path.dirname(__file__)
+                           ).parent.resolve() / ".." / "db" / "items.db")
+sqlite_file = str(pathlib.Path(os.path.dirname(__file__)
+                               ).parent.resolve() / ".." / "db" / "mercari.sqlite3")
 
 # ----endpoints--------------------------
 
 
 @app.on_event("startup")
 def initialize():
-    if not os.path.exists(json_file):
-        # open(json_file, 'w').close()
-        with open(json_file, "w", encoding='utf-8') as file:
-            json.dump({"items": []}, file, indent=4)
-    logger.info("Created items.json if not initially exist")
+    if not os.path.exists(db_file):
+        open(db_file, 'w').close()
+
+    if not os.path.exists(sqlite_file):
+        open(sqlite_file, 'w').close()
+
+    logger.info("Launching the app...")
+
+    con = sqlite3.connect(sqlite_file)
+    cur = con.cursor()
+
+    # update schema
+    with open(db_file, encoding='utf-8') as file:
+        schema = file.read()
+    cur.execute(f"""{schema}""")
+    con.commit()
+    con.close()
+
     return None
 
 
@@ -42,37 +60,53 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...)):
-    logger.info(f"Receive item: {name} in {category}")
+def add_item(id: int = Form(...), name: str = Form(...), category: str = Form(...)):
+    logger.info(f"Receive item - ID: {id}, name:{name}, category:{category}")
 
-    # open the json file to record new item defined above
-    with open(json_file, "r+", encoding='utf-8') as file:
-        # load the existing data
-        file_data = json.load(file)
+    con = sqlite3.connect(sqlite_file)
+    cur = con.cursor()
 
-        # define a item to be added
-        new_item = {
-            "name": name,
-            "category": category
-        }
-
-        # append new item to the existing items
-        file_data["items"].append(new_item)
-
-        # sets file's current position at offset.
-        file.seek(0)
-
-        # write updated data to json file
-        json.dump(file_data, file, indent=4)
-
-    return {"message": f"item received: {name} in {category}"}
+    # insert item
+    cur.execute("INSERT INTO items VALUES(?,?,?)",
+                (id, name, category))
+    con.commit()
+    con.close()
+    return {f"message: item received: ID {id} - {name} in {category}"}
 
 
 @app.get("/items")
 def get_item():
-    with open(json_file, "r", encoding='utf-8') as file:
-        items = json.load(file)
-    return items
+    logger.info("Get all items")
+
+    con = sqlite3.connect(sqlite_file)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    # select all items
+    cur.execute("SELECT * from items")
+    items_json = {"items": cur.fetchall()}
+    con.close()
+
+    return items_json
+
+
+@app.get("/search")
+def search_item(keyword: str):  # query parameter
+    logger.info(f"Search item with {keyword}")
+
+    con = sqlite3.connect(sqlite_file)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    # select item matching keyword
+    cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
+    lst = cur.fetchall()
+    con.close()
+    if lst == []:
+        message = {"message": "No matching item"}
+    else:
+        message = {"items": lst}
+    return message
 
 
 @app.get("/image/{items_image}")
@@ -89,3 +123,8 @@ async def get_image(items_image):
         image = images / "default.jpg"
 
     return FileResponse(image)
+
+
+@app.on_event("shutdown")
+def close():
+    logger.info("Closing the app...")
