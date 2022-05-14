@@ -9,6 +9,7 @@ import json
 import sqlite3
 import hashlib
 
+
 # ----config----------------------------
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
@@ -28,6 +29,7 @@ db_file = str(pathlib.Path(os.path.dirname(__file__)
                            ).parent.resolve() / ".." / "db" / "items.db")
 sqlite_file = str(pathlib.Path(os.path.dirname(__file__)
                                ).parent.resolve() / ".." / "db" / "mercari.sqlite3")
+
 
 # ----endpoints--------------------------
 
@@ -114,7 +116,6 @@ def search_item(keyword: str):  # query parameter
     else:
         message = {"items": lst}
     return message
-
 
 @app.get("/image/{items_image}")
 async def get_image(items_image):
