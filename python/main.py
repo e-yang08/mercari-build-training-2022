@@ -60,18 +60,18 @@ def root():
 
 
 @app.post("/items")
-def add_item(id: int = Form(...), name: str = Form(...), category: str = Form(...)):
-    logger.info(f"Receive item - ID: {id}, name:{name}, category:{category}")
+def add_item(name: str = Form(...), category: str = Form(...)):
+    logger.info(f"Receive item - name:{name}, category:{category}")
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
     # insert item
-    cur.execute("INSERT INTO items VALUES(?,?,?)",
-                (id, name, category))
+    cur.execute("INSERT INTO items(name, category) VALUES(?,?)",
+                (name, category))
     con.commit()
     con.close()
-    return {f"message: item received: ID {id} - {name} in {category}"}
+    return {f"message: item received: {name} in {category}"}
 
 
 @app.get("/items")
