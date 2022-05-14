@@ -47,7 +47,7 @@ def initialize():
     # update schema
     with open(db_file, encoding='utf-8') as file:
         schema = file.read()
-    cur.execute(f"""{schema}""")
+    cur.executescript(f"""{schema}""")
     con.commit()
     con.close()
 
@@ -72,9 +72,16 @@ def add_item(name: str = Form(...), category: str = Form(...), image: str = Form
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
+    cur.execute(
+        "INSERT OR IGNORE INTO category(category_name) VALUES (?)", (category, ))
+
+    # retrieve category id
+    cur.execute(
+        "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
+    category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
-    cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
-                (name, category, hashes))
+    cur.execute("INSERT INTO items(name, category_id, image) VALUES(?,?,?)",
+                (name, category_id, hashes))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
@@ -89,7 +96,10 @@ def get_item():
     cur = con.cursor()
 
     # select all items
-    cur.execute("SELECT * from items")
+    cur.execute(
+        """SELECT items.name, category.category_name as category, 
+        items.image FROM items INNER JOIN category 
+        ON category.category_id = items.category_id""")
     items_json = {"items": cur.fetchall()}
     con.close()
 
@@ -105,7 +115,12 @@ def search_item(keyword: str):  # query parameter
     cur = con.cursor()
 
     # select item matching keyword
-    cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
+    # cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
+    cur.execute(
+        """SELECT items.name, category.category_name as category, 
+        items.image FROM items INNER JOIN category ON 
+        category.category_id = items.category_id WHERE items.name LIKE (?)""", (f"%{keyword}%", ))
+
     lst = cur.fetchall()
     con.close()
     if lst == []:
@@ -126,7 +141,9 @@ def get_item_by_id(items_id):
 
     # select item matching keyword
     cur.execute(
-        "SELECT name, category, image from items WHERE id=(?)", (items_id,))
+        """SELECT items.name, category.category_name as category, 
+        items.image FROM items INNER JOIN category 
+        ON category.category_id = items.category_id WHERE id=(?)""", (items_id,))
     item = cur.fetchone()
     con.close()
     if item is None:
@@ -146,7 +163,7 @@ async def get_image(items_image):
             status_code=400, detail="Image path does not end with .jpg")
 
     if not image.exists():
-        logger.debug(f"Image not found: {image}")
+        logger.info(f"Image not found: {image}")
         image = images / "default.jpg"
 
     return FileResponse(image)
