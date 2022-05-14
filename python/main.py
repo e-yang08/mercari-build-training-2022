@@ -125,13 +125,14 @@ def get_item_by_id(items_id):
     cur = con.cursor()
 
     # select item matching keyword
-    cur.execute("SELECT * from items WHERE id=(?)", (items_id,))
-    lst = cur.fetchall()
+    cur.execute(
+        "SELECT name, category, image from items WHERE id=(?)", (items_id,))
+    item = cur.fetchone()
     con.close()
-    if lst == []:
+    if item is None:
         message = {"message": "No matching item"}
     else:
-        message = {"items": lst}
+        message = item
     return message
 
 
