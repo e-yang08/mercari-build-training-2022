@@ -62,18 +62,18 @@ def root():
 
 
 @app.post("/items")
-def add_item(id: int = Form(...), name: str = Form(...), category: str = Form(...)):
-    logger.info(f"Receive item - ID: {id}, name:{name}, category:{category}")
+def add_item(name: str = Form(...), category: str = Form(...)):
+    logger.info(f"Receive item - name:{name}, category:{category}")
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
     # insert item
-    cur.execute("INSERT INTO items VALUES(?,?,?)",
-                (id, name, category))
+    cur.execute("INSERT INTO items(name, category) VALUES(?,?)",
+                (name, category))
     con.commit()
     con.close()
-    return {f"message: item received: ID {id} - {name} in {category}"}
+    return {f"message: item received: {name} in {category}"}
 
 
 @app.get("/items")
@@ -92,8 +92,27 @@ def get_item():
     return items_json
 
 
+@app.get("/search")
+def search_item(keyword: str):  # query parameter
+    logger.info(f"Search item with {keyword}")
+
+    con = sqlite3.connect(sqlite_file)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    # select item matching keyword
+    cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
+    lst = cur.fetchall()
+    con.close()
+    if lst == []:
+        message = {"message": "No matching item"}
+    else:
+        message = {"items": lst}
+    return message
+
 @app.get("/image/{image_filename}")
 async def get_image(image_filename):
+
     # Create image path
     image = images / image_filename
 
