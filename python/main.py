@@ -1,7 +1,7 @@
 import os
 import logging
 import pathlib
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
@@ -60,14 +60,15 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
+async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
 
-    if not image.endswith(".jpg"):
+    if not image.filename.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(image[:-4].encode('utf-8')).hexdigest() + '.jpg'
+    hashes = hashlib.sha256(
+        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -80,7 +81,7 @@ def add_item(name: str = Form(...), category: str = Form(...), image: str = Form
         "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
-    cur.execute("INSERT INTO items(name, category_id, image) VALUES(?,?,?)",
+    cur.execute("INSERT INTO items(name, category_id, image_filename) VALUES(?,?,?)",
                 (name, category_id, hashes))
     con.commit()
     con.close()
@@ -98,11 +99,17 @@ def get_item():
     # select all items
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category 
+        items.image_filename FROM items INNER JOIN category 
         ON category.category_id = items.category_id""")
-    items_json = {"items": cur.fetchall()}
+
+    lst = cur.fetchall()
     con.close()
 
+    if lst == []:
+        raise HTTPException(
+            status_code=404, detail="No item to list")
+
+    items_json = {"items": lst}
     return items_json
 
 
@@ -118,15 +125,16 @@ def search_item(keyword: str):  # query parameter
     # cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category ON 
+        items.image_filename FROM items INNER JOIN category ON 
         category.category_id = items.category_id WHERE items.name LIKE (?)""", (f"%{keyword}%", ))
 
     lst = cur.fetchall()
     con.close()
     if lst == []:
-        message = {"message": "No matching item"}
-    else:
-        message = {"items": lst}
+        raise HTTPException(
+            status_code=404, detail="No matching item")
+
+    message = {"items": lst}
     return message
 
 
@@ -142,7 +150,7 @@ def get_item_by_id(items_id):
     # select item matching keyword
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category 
+        items.image_filename FROM items INNER JOIN category 
         ON category.category_id = items.category_id WHERE id=(?)""", (items_id,))
     item = cur.fetchone()
     con.close()
