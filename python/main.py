@@ -60,14 +60,15 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
+async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
 
-    if not image.endswith(".jpg"):
+    if not image.filename.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(image[:-4].encode('utf-8')).hexdigest() + '.jpg'
+    hashes = hashlib.sha256(
+        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -78,7 +79,6 @@ def add_item(name: str = Form(...), category: str = Form(...), image: str = Form
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
-
 
 @app.get("/items")
 def get_item():
