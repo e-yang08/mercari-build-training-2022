@@ -1,7 +1,7 @@
 import os
 import logging
 import pathlib
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
@@ -60,14 +60,15 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...), image: str = Form(...)):
+def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
 
     if not image.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(image[:-4].encode('utf-8')).hexdigest() + '.jpg'
+    hashes = hashlib.sha256(
+        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -153,21 +154,19 @@ def get_item_by_id(items_id):
     return message
 
 
-@app.get("/image/{items_image}")
-async def get_image(items_image):
+@app.get("/image/{image_filename}")
+async def get_image(image_filename):
     # Create image path
-    image = images / items_image
+    image = images / image_filename
 
-    if not items_image.endswith(".jpg"):
-        raise HTTPException(
-            status_code=400, detail="Image path does not end with .jpg")
+    if not image_filename.endswith(".jpg"):
+        raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
 
     if not image.exists():
-        logger.info(f"Image not found: {image}")
+        logger.debug(f"Image not found: {image}")
         image = images / "default.jpg"
 
     return FileResponse(image)
-
 
 @app.on_event("shutdown")
 def close():
