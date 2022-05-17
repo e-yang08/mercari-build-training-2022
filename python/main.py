@@ -155,10 +155,9 @@ def get_item_by_id(items_id):
     item = cur.fetchone()
     con.close()
     if item is None:
-        message = {"message": "No matching item"}
-    else:
-        message = item
-    return message
+        raise HTTPException(
+            status_code=404, detail="No matching item")
+    return item
 
 
 @app.get("/image/{items_image}")
