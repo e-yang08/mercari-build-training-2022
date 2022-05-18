@@ -67,15 +67,21 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(
-        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
+    split_lst = image.filename.split(".")
+    hashed_name = f"{hashlib.sha256(split_lst[0].encode('utf-8')).hexdigest()}.{split_lst[1]}"
+
+    image_contents = await image.read()
+
+    image_path = images / hashed_name
+    with open(image_path, 'wb') as image_file:
+        image_file.write(image_contents)
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
     # insert item
     cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
-                (name, category, hashes))
+                (name, category, hashed_name))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
