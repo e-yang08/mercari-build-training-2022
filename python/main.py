@@ -60,15 +60,21 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
+async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
 
-    if not image.endswith(".jpg"):
+    if not image.filename.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(
-        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
+    split_lst = image.filename.split(".")
+    hashed_name = f"{hashlib.sha256(split_lst[0].encode('utf-8')).hexdigest()}.{split_lst[1]}"
+
+    image_contents = await image.read()
+
+    image_path = images / hashed_name
+    with open(image_path, 'wb') as image_file:
+        image_file.write(image_contents)
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -81,12 +87,11 @@ def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile
         "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
-    cur.execute("INSERT INTO items(name, category_id, image) VALUES(?,?,?)",
-                (name, category_id, hashes))
+    cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
+                (name, category, hashed_name))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
-
 
 @app.get("/items")
 def get_item():
