@@ -1,19 +1,19 @@
 import os
 import logging
 import pathlib
-from fastapi import FastAPI, Form, HTTPException
+from fastapi import FastAPI, Form, File, UploadFile, HTTPException
 from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 # additionally imported
-import json
 import sqlite3
+import hashlib
 
 
 # ----config----------------------------
 app = FastAPI()
 logger = logging.getLogger("uvicorn")
 logger.level = logging.INFO
-images = pathlib.Path(__file__).parent.resolve() / "image"
+images = pathlib.Path(__file__).parent.resolve() / "images"
 origins = [os.environ.get('FRONT_URL', 'http://localhost:3000')]
 app.add_middleware(
     CORSMiddleware,
@@ -31,8 +31,6 @@ sqlite_file = str(pathlib.Path(os.path.dirname(__file__)
 
 
 # ----endpoints--------------------------
-
-
 @app.on_event("startup")
 def initialize():
     if not os.path.exists(db_file):
@@ -62,19 +60,31 @@ def root():
 
 
 @app.post("/items")
-def add_item(name: str = Form(...), category: str = Form(...)):
+async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
+
+    if not image.filename.endswith(".jpg"):
+        raise HTTPException(
+            status_code=400, detail="Image is not in .jpg format")
+
+    split_lst = image.filename.split(".")
+    hashed_name = f"{hashlib.sha256(split_lst[0].encode('utf-8')).hexdigest()}.{split_lst[1]}"
+
+    image_contents = await image.read()
+
+    image_path = images / hashed_name
+    with open(image_path, 'wb') as image_file:
+        image_file.write(image_contents)
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
     # insert item
-    cur.execute("INSERT INTO items(name, category) VALUES(?,?)",
-                (name, category))
+    cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
+                (name, category, hashed_name))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
-
 
 @app.get("/items")
 def get_item():
@@ -110,9 +120,30 @@ def search_item(keyword: str):  # query parameter
         message = {"items": lst}
     return message
 
+
+@app.get("/items/{items_id}")
+def get_item_by_id(items_id):
+
+    logger.info(f"Search item with ID: {items_id}")
+
+    con = sqlite3.connect(sqlite_file)
+    con.row_factory = sqlite3.Row
+    cur = con.cursor()
+
+    # select item matching keyword
+    cur.execute(
+        "SELECT name, category, image from items WHERE id=(?)", (items_id,))
+    item = cur.fetchone()
+    con.close()
+    if item is None:
+        message = {"message": "No matching item"}
+    else:
+        message = item
+    return message
+
+
 @app.get("/image/{image_filename}")
 async def get_image(image_filename):
-
     # Create image path
     image = images / image_filename
 

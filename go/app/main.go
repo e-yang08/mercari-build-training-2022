@@ -13,7 +13,7 @@ import (
 )
 
 const (
-	ImgDir = "image"
+	ImgDir = "images"
 )
 
 type Response struct {
