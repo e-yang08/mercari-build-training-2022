@@ -67,8 +67,15 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(
-        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
+    split_lst = image.filename.split(".")
+    hashed_name = f"{hashlib.sha256(split_lst[0].encode('utf-8')).hexdigest()}.{split_lst[1]}"
+
+    image_contents = await image.read()
+
+    image_path = images / hashed_name
+    with open(image_path, 'wb') as image_file:
+        image_file.write(image_contents)
+
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -81,12 +88,12 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
         "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
-    cur.execute("INSERT INTO items(name, category_id, image_filename) VALUES(?,?,?)",
-                (name, category_id, hashes))
+    cur.execute("INSERT INTO items(name, category, image_filename) VALUES(?,?,?)",
+                (name, category, hashed_name))
+
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
-
 
 @app.get("/items")
 def get_item():
@@ -160,21 +167,19 @@ def get_item_by_id(items_id):
     return item
 
 
-@app.get("/image/{items_image}")
-async def get_image(items_image):
+@app.get("/image/{image_filename}")
+async def get_image(image_filename):
     # Create image path
-    image = images / items_image
+    image = images / image_filename
 
-    if not items_image.endswith(".jpg"):
-        raise HTTPException(
-            status_code=400, detail="Image path does not end with .jpg")
+    if not image_filename.endswith(".jpg"):
+        raise HTTPException(status_code=400, detail="Image path does not end with .jpg")
 
     if not image.exists():
         logger.info(f"Image not found: {image}")
         image = images / "default.jpg"
 
     return FileResponse(image)
-
 
 @app.on_event("shutdown")
 def close():
