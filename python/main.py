@@ -63,12 +63,18 @@ def root():
 async def add_item(name: str = Form(...), category: str = Form(...), image: UploadFile = File(...)):
     logger.info(f"Receive item - name:{name}, category:{category}")
 
-    if not image.filename.endswith(".jpg"):
+    if not (image.filename.endswith(".jpg") or image.filename.endswith(".jpeg")):
         raise HTTPException(
             status_code=400, detail="Image is not in .jpg format")
 
-    hashes = hashlib.sha256(
-        image.filename.split(".")[0].encode('utf-8')).hexdigest() + '.jpg'
+    split_lst = image.filename.split(".")
+    hashed_name = f"{hashlib.sha256(split_lst[0].encode('utf-8')).hexdigest()}.{split_lst[1]}"
+
+    image_contents = await image.read()
+
+    image_path = images / hashed_name
+    with open(image_path, 'wb') as image_file:
+        image_file.write(image_contents)
 
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
@@ -82,7 +88,7 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
     cur.execute("INSERT INTO items(name, category_id, image_filename) VALUES(?,?,?)",
-                (name, category_id, hashes))
+                (name, category_id, hashed_name))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
@@ -139,8 +145,7 @@ def search_item(keyword: str):  # query parameter
 
 
 @app.get("/items/{items_id}")
-def get_item_by_id(items_id):
-
+def get_item_by_id(items_id: int):
     logger.info(f"Search item with ID: {items_id}")
 
     con = sqlite3.connect(sqlite_file)
@@ -160,19 +165,47 @@ def get_item_by_id(items_id):
     return item
 
 
-@app.get("/image/{items_image}")
-async def get_image(items_image):
-    # Create image path
-    image = images / items_image
+@app.delete("/items/{items_id}")
+def delete_item_by_id(items_id: int):
+    logger.info(f"Delete item with ID: {items_id}")
 
-    if not items_image.endswith(".jpg"):
+    # con = sqlite3.connect(sqlite_file)
+    # con.row_factory = sqlite3.Row
+    # cur = con.cursor()
+
+    # # select item matching keyword
+    # cur.execute(
+    #     """SELECT items.name, category.category_name as category,
+    #     items.image_filename FROM items INNER JOIN category
+    #     ON category.category_id = items.category_id WHERE id=(?)""", (items_id,))
+    # item = cur.fetchone()
+
+    # if item is None:
+    #     raise HTTPException(
+    #         status_code=404, detail="No matching item to delete")
+
+    # cur.execute(
+    #     """DELETE items.name, category.category_name as category,
+    #     items.image_filename FROM items INNER JOIN category
+    #     ON category.category_id = items.category_id WHERE id=(?)""", (items_id,))
+    # conn.commit()
+    # con.close()
+    return {"message: item deleted:"}
+
+
+@app.get("/image/{image_filename}")
+async def get_image(image_filename):
+    # Create image path
+    image = images / image_filename
+
+    if not image_filename.endswith(".jpg"):
         raise HTTPException(
             status_code=400, detail="Image path does not end with .jpg")
 
     if not image.exists():
         logger.info(f"Image not found: {image}")
         image = images / "default.jpg"
-
+    logger.info(f"hello {image}")
     return FileResponse(image)
 
 
