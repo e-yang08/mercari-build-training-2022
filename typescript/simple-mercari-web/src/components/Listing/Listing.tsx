@@ -21,11 +21,22 @@ export const Listing: React.FC<Prop> = (props) => {
   };
   const [values, setValues] = useState<formDataType>(initialState);
 
-  const onValueChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValues({
       ...values, [event.target.name]: event.target.value,
     })
   };
+
+
+  // This function is triggered when the select changes
+  // const selectChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+  //   // const value = event.target.value;
+  //   // setSelectedOption(value);
+  //   setState({
+  //     ...values, [event.target.name]: event.target.value,
+  //   })
+  // };
+
   const onFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setValues({
       ...values, [event.target.name]: event.target.files![0],
@@ -55,10 +66,21 @@ export const Listing: React.FC<Prop> = (props) => {
     <div className='Listing'>
       <form onSubmit={onSubmit}>
         <div>
-          <input type='text' name='name' id='name' placeholder='name' onChange={onValueChange} required />
-          <input type='text' name='category' id='category' placeholder='category' onChange={onValueChange} required />
-          <input type='file' name='image' id='image' onChange={onFileChange} required />
-          <button type='submit'>List this item</button>
+          <input type='text' name='name' id='nameInput' placeholder='name' onChange={onNameChange} required />
+          <input type='text' name='category' id='CategoryInput' placeholder='name' onChange={onNameChange} required />
+          {/* <select name='category' id='categoryInput'  required>
+            <option selected disabled hidden className='placeHolder'>category</option>
+            <option value='Fashion'>Fashion</option>
+            <option value='Beauty'>Beauty</option>
+            <option value='Home'>Home</option>
+            <option value='Furniture'>Furniture</option>
+            <option value='Jewelry'>Jewelry</option>
+            <option value='Kids'>Kids</option>
+            <option value='Toys'>Toys</option>
+            <option value='Books'>Books</option>
+          </select> */}
+          <input type='file' name='image' id='imageInput' onChange={onFileChange} required />
+          <button type='submit' id='submit-button'>List this item</button>
         </div>
       </form>
     </div>

@@ -46,6 +46,7 @@ def set_up_files():
     with open(db_file, encoding='utf-8') as file:
         schema = file.read()
     cur.executescript(f"""{schema}""")
+    con.commit()
 
     # set up the category
     cur.execute("""SELECT category_id FROM category""")
@@ -53,8 +54,8 @@ def set_up_files():
 
     if result_category is None:
         logger.info("Setting up the category")
-        category_list = [("Fashion",), ("Beauty",), ("Home",), ("Furniture",), (
-            "Shoes",), ("Handbags",), ("Jewelry",), ("Kids",), ("Toys",), ("Books",)]
+        category_list = [("Fashion",), ("Beauty",), ("Home",), ("Furniture",),
+                         ("Jewelry",), ("Kids",), ("Toys",), ("Books",)]
         cur.executemany(
             """INSERT INTO category(category_name) VALUES (?)""", category_list)
         con.commit()
