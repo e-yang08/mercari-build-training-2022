@@ -74,10 +74,10 @@ export const ItemList: React.FC<Prop> = (props) => {
             <p>
               <span id="item-category"> {item.category}</span>
               <span id="item-name">{item.name}</span>
-              <button>
-                <img id="delete-btn" src="delete-icon.png" alt="delete icon"></img>
-              </button>
             </p>
+            <button id="delete-btn">
+              <img id="delete-btn-img" src="delete-icon.png" alt="delete icon"></img>
+            </button>
           </div>
         )
       })}

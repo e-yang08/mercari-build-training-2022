@@ -73,9 +73,6 @@ input[type="file"] {
   display: none;
 }
 
-
-
-
 #submit-button {
   float: right;
   padding: 1vmin;
@@ -149,8 +146,8 @@ input[type="file"] {
 }
 
 #delete-btn-img {
-  width: 2.5vmin;
-  height: 2.5vmin;
+  width: 3vmin;
+  height: 3vmin;
   padding: none;
   margin: none;
 }
@@ -162,7 +159,7 @@ input[type="file"] {
   width: 4vmin;
   height: 4vmin;
   padding: none;
-  margin: 0 0.5vmin 0.5vmin 20vmin;
+  margin: 0 0.5vmin 1vmin 21vmin;
 }
 
 
