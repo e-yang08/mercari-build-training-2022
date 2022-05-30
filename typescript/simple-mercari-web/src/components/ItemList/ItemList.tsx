@@ -47,22 +47,23 @@ export const ItemList: React.FC<Prop> = (props) => {
       })
   }
 
+
   useEffect(() => {
     if (reload) {
       fetchItems();
     }
   }, [reload]);
 
-  if (emptyState) {
-    return (
-      <div className="empty-state">
-        <img id="empty-image" src="emptystate.svg" alt="Empty State" />
-        <h3>No Listed Item</h3>
-        <p>Newly listed items will appear here.</p>
-      </div>
-    )
-  }
-  else {
+  // if (emptyState) {
+  //   return (
+  //     <div className="empty-state">
+  //       <img id="empty-image" src="emptystate.svg" alt="Empty State" />
+  //       <h3>No Listed Item</h3>
+  //       <p>Newly listed items will appear here.</p>
+  //     </div>
+  //   )
+  // }
+  // else {
     return (
       <div className='GridListing'>
         {items.map((item) => {
@@ -82,5 +83,5 @@ export const ItemList: React.FC<Prop> = (props) => {
         })}
       </div>
     )
-  }
+  // }
 };
