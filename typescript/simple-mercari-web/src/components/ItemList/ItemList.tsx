@@ -64,24 +64,24 @@ export const ItemList: React.FC<Prop> = (props) => {
   //   )
   // }
   // else {
-    return (
-      <div className='GridListing'>
-        {items.map((item) => {
-          return (
-            <div key={item.id} className='ItemList'>
-              {/* TODO: Task 1: Replace the placeholder image with the item image */}
-              <img src={`${server}/image/${item.image_filename}`} alt="item-image" className='ListedImage' />
-              <p>
-                <span id="item-category"> {item.category}</span>
-                <span id="item-name">{item.name}</span>
-                <button>
-                  <img id="delete-btn" src="delete-icon.png" alt="delete icon"></img>
-                </button>
-              </p>
-            </div>
-          )
-        })}
-      </div>
-    )
+  return (
+    <div className='GridListing'>
+      {items.map((item) => {
+        return (
+          <div key={item.id} className='ItemList'>
+            {/* TODO: Task 1: Replace the placeholder image with the item image */}
+            <img src={`${server}/image/${item.image_filename}`} alt="item-image" className='ListedImage' />
+            <p>
+              <span id="item-category"> {item.category}</span>
+              <span id="item-name">{item.name}</span>
+              <button>
+                <img id="delete-btn" src="delete-icon.png" alt="delete icon"></img>
+              </button>
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  )
   // }
 };
