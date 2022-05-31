@@ -60,37 +60,35 @@ export const ItemList: React.FC<Prop> = (props) => {
   }, [reload]);
 
   // render() {
-  //   if (emptyState) {
-  //     return (
-  //       <div className="empty-state">
-  //         <img id="empty-image" src="emptystate.svg" alt="Empty State" />
-  //         <h3>No Listed Item</h3>
-  //         <p>Newly listed items will appear here.</p>
-  //       </div>
-  //     )
-  //   }
-  //   else {
-  return (
-    <div className='GridListing'>
-      {items.map((item) => {
-        return (
-          <div key={item.id} className='ItemList'>
-            {/* TODO: Task 1: Replace the placeholder image with the item image */}
-            <img src={`${server}/image/${item.image_filename}`} alt="item-image" className='ListedImage' />
-            <p>
-              <span id="item-category"> {item.category}</span>
-              <span id="item-name">{item.name}</span>
-            </p>
-            <button id="delete-btn">
-              <img id="delete-btn-img" src="delete-icon.png" alt="delete icon"></img>
-            </button>
-            <span>{item.product_id}</span>
-            <span>{item.details}</span>
-          </div>
-        )
-      })}
-    </div>
-  )
-  // }
-  // }
+  if (emptyState) {
+    return (
+      <div className="empty-state">
+        <img id="empty-image" src="emptystate.svg" alt="Empty State" />
+        <h3>No Listed Item</h3>
+        <p>Newly listed items will appear here.</p>
+      </div>
+    )
+  }
+  else {
+    return (
+      <div className='GridListing'>
+        {items.map((item) => {
+          return (
+            <div key={item.id} className='ItemList'>
+              {/* TODO: Task 1: Replace the placeholder image with the item image */}
+              <img src={`${server}/image/${item.image_filename}`} alt="item-image" className='ListedImage' />
+              <p>
+                <span id="item-category"> {item.category}</span>
+                <span id="item-name">{item.name}</span>
+              </p>
+              <button id="delete-btn">
+                <img id="delete-btn-img" src="delete-icon.png" alt="delete icon"></img>
+              </button>
+            </div>
+          )
+        })}
+      </div>
+    )
+    // }
+  }
 };

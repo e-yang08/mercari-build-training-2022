@@ -84,6 +84,11 @@ export const Listing: React.FC<Prop> = (props) => {
         console.error('POST error:', error);
       })
   };
+  const autofill = (temp: string) => {
+    (document.getElementById("detailsInput")as HTMLTextAreaElement).value = 
+    "eeeeeeeeeeeee";
+  };
+
   return (
     <div>
       <form onSubmit={onSubmit}>
@@ -107,6 +112,9 @@ export const Listing: React.FC<Prop> = (props) => {
           {/* potentially make option @e-yang08 */}
           <input type='text' name='size' id='sizeInput' placeholder='Size' value={values.size} onChange={onNameChange} required />
           <input type='text' name='product_id' id='productIDInput' placeholder='Product ID (Optional)' value={values.product_id} onChange={onNameChange} />
+          <form>
+            <button type='submit' id='Autofill-button' onClick={() => autofill("Temp")}>Autofill</button>
+          </form>
           {/* <input type='text' name='details' id='detailsInput' placeholder="Enter item's details" value={values.details} onChange={onNameChange} required /> */}
           <textarea name='details' id='detailsInput' cols={30} rows={5} placeholder="Enter item's details" value={values.details} onChange={onTextChange} required></textarea>
           <input type='file' name='image' id='imageInput' onChange={onFileChange} />
