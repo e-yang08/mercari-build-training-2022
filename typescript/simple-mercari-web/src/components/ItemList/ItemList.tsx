@@ -5,6 +5,10 @@ interface Item {
   id: number;
   name: string;
   category: string;
+  brand: string,
+  size: string,
+  product_id: string,
+  details: string,
   image_filename: string;
 };
 
@@ -80,6 +84,8 @@ export const ItemList: React.FC<Prop> = (props) => {
             <button id="delete-btn">
               <img id="delete-btn-img" src="delete-icon.png" alt="delete icon"></img>
             </button>
+            <span>{item.product_id}</span>
+            <span>{item.details}</span>
           </div>
         )
       })}

@@ -1,6 +1,7 @@
 * {
   font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New';
   outline: none;
+  box-sizing: border-box;
 }
 
 
@@ -17,6 +18,62 @@
   justify-content: left;
   font-size: 3vmin;
   color: white;
+}
+
+.search-bar {
+  width: fit-content;
+  height: fit-content;
+  position: relative;
+  margin: 2vmin 0 0 5vmin;
+}
+
+.search-input {
+  height: 5vmin;
+  width: 5vmin;
+  border-style: none;
+  padding: 1vmin 1vmin 1vmin 4vmin;
+  font-size: 2.5vmin;
+  letter-spacing: -0.15vmin;
+  border-radius: 2.5vh;
+  transition: all .5s ease-in-out;
+  background-color: #4DC9FF;
+  margin-top: 1vmin;
+  margin-left: 2vmin;
+  color: white;
+}
+
+.search-input::placeholder {
+  color: #EBECF0;
+  font-size: 2vmin;
+  letter-spacing: -0.15vmin;
+}
+
+.search-btn {
+  position: absolute;
+  right: 0px;
+  height: 5vmin;
+  width: 5vmin;
+  border-style: none;
+  font-size: 2.5vmin;
+  cursor: pointer;
+  border-radius: 50%;
+  background-color: transparent;
+  pointer-events: painted;
+}
+
+.search-btn:focus~.search-input,
+.search-input:focus {
+  width: 30vmin;
+  border-radius: 5vmin;
+  background-color: #4DC9FF;
+  border-bottom: 1px solid lightgray;
+  transition: all 400ms cubic-bezier(0, 0.50, 0.35, 2);
+}
+
+#search-btn-img {
+  width: 3vmin;
+  height: 3vmin;
+  margin-top: 1.7vmin;
 }
 
 #Listing-app {
@@ -40,7 +97,7 @@
 #categoryInput,
 #brandInput,
 #sizeInput,
-#productNumInput,
+#productIDInput,
 #detailsInput {
   padding: 1vmin;
   margin-bottom: 1.5vh;

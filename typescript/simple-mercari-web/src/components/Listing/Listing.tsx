@@ -9,6 +9,10 @@ interface Prop {
 type formDataType = {
   name: string,
   category: string,
+  brand: string,
+  size: string,
+  product_id: string,
+  details: string,
   image: string | File,
 }
 
@@ -17,11 +21,21 @@ export const Listing: React.FC<Prop> = (props) => {
   const initialState = {
     name: "",
     category: "",
+    brand: "",
+    size: "",
+    product_id: "",
+    details: "",
     image: "",
   };
   const [values, setValues] = useState<formDataType>(initialState);
 
   const onNameChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setValues({
+      ...values, [event.target.name]: event.target.value,
+    })
+  };
+
+  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     setValues({
       ...values, [event.target.name]: event.target.value,
     })
@@ -46,6 +60,10 @@ export const Listing: React.FC<Prop> = (props) => {
     const data = new FormData()
     data.append('name', values.name)
     data.append('category', values.category)
+    data.append('brand', values.brand)
+    data.append('size', values.size)
+    data.append('product_id', values.product_id)
+    data.append('details', values.details)
     data.append('image', values.image)
 
     fetch(server.concat('/items'), {
@@ -60,7 +78,7 @@ export const Listing: React.FC<Prop> = (props) => {
 
         // clear input after submission
         setValues(initialState);
-        (document.getElementById('imageName') as HTMLInputElement).value = "";
+        // (document.getElementById('imageName') as HTMLInputElement).value = "";
       })
       .catch((error) => {
         console.error('POST error:', error);
@@ -85,11 +103,12 @@ export const Listing: React.FC<Prop> = (props) => {
             <option value='Books'>Books</option>
           </select> */}
           {/* potentially make option @e-yang08 */}
-          <input type='text' name='brand' id='brandInput' placeholder='Brand' value={values.name} onChange={onNameChange} required />
+          <input type='text' name='brand' id='brandInput' placeholder='Brand' value={values.brand} onChange={onNameChange} required />
           {/* potentially make option @e-yang08 */}
-          <input type='text' name='size' id='sizeInput' placeholder='Size' value={values.name} onChange={onNameChange} required />
-          <input type='text' name='product' id='productNumInput' placeholder='Product # (Optional)' value={values.name} onChange={onNameChange} />
-          <textarea name='details' id='detailsInput' cols={30} rows={5} placeholder="Enter text"></textarea>
+          <input type='text' name='size' id='sizeInput' placeholder='Size' value={values.size} onChange={onNameChange} required />
+          <input type='text' name='product_id' id='productIDInput' placeholder='Product ID (Optional)' value={values.product_id} onChange={onNameChange} />
+          {/* <input type='text' name='details' id='detailsInput' placeholder="Enter item's details" value={values.details} onChange={onNameChange} required /> */}
+          <textarea name='details' id='detailsInput' cols={30} rows={5} placeholder="Enter item's details" value={values.details} onChange={onTextChange} required></textarea>
           <input type='file' name='image' id='imageInput' onChange={onFileChange} />
           <label className='upload-btn' htmlFor='imageInput'>
             <img id='upload-btn-img' src='upload-icon.png' alt='upload icon'></img>

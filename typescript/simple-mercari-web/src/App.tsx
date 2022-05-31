@@ -13,6 +13,13 @@ function App() {
           <b>Simple Mercari</b>
         </p>
       </header>
+      <div className="search-bar">
+        Search by Product ID
+        <button className="search-btn">
+          <img id="search-btn-img" src="search-icon.png" alt="search icon"></img>
+        </button>
+        <input type="text" className="search-input" placeholder="(e.g., UNIQLO 314353)" />
+      </div>
       <div id="Listing-app">
         <Listing onListingCompleted={() => setReload(true)} />
       </div>
