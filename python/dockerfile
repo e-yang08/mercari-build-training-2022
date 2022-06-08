@@ -1,6 +1,8 @@
 FROM python:3.8-slim-buster
 
-COPY db ./db
+# COPY db/items.db db
+
+COPY db .
 
 WORKDIR /python
 
