@@ -98,7 +98,6 @@ async def add_item(name: str = Form(...), category: str = Form(...), brand: str 
     image_path = images / hashed_name
     with open(image_path, 'wb') as image_file:
         image_file.write(image_contents)
-
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
@@ -109,14 +108,12 @@ async def add_item(name: str = Form(...), category: str = Form(...), brand: str 
     cur.execute(
         "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
-
     # insert item
     cur.execute("""INSERT INTO items(name, category_id, brand,size,product_id,details,image_filename) VALUES(?,?,?,?,?,?,?)""",
                 (name, category_id, brand, size, product_id, details, hashed_name))
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
-
 
 @app.get("/items")
 def get_item():
@@ -168,27 +165,6 @@ def search_item_by_keyword(keyword: str):  # query parameter
 
     message = {"items": lst}
     return message
-
-# def search_item_by_product_id(brand: str, product_id: int):
-#     logger.info(f"Search item with ID: {product_id} from {brand}")
-
-#     con = sqlite3.connect(sqlite_file)
-#     con.row_factory = sqlite3.Row
-#     cur = con.cursor()
-
-#     # select item matching keyword
-#     cur.execute(
-#         """SELECT items.name, category.category_name as category,
-#         items.brand,items.size,items.product_id,items.details,
-#         items.image_filename FROM items INNER JOIN category
-#         ON category.category_id = items.category_id WHERE items.brand=(?) AND items.product_id=(?)""", (f"{brand}", product_id,))
-#     item = cur.fetchone()
-#     con.close()
-#     if item is None:
-#         raise HTTPException(
-#             status_code=404, detail="No matching item")
-#     return item
-
 
 # replace the ID search with product ID search
 
@@ -263,7 +239,6 @@ def delete_item_by_id(items_id: int):
     con.close()
     return {f"message: item (ID: {items_id}) deleted"}
 
-
 @app.get("/image/{image_filename}")
 async def get_image(image_filename):
     # Create image path
@@ -278,7 +253,6 @@ async def get_image(image_filename):
         image = images / "default.jpg"
     logger.info(f"hello {image}")
     return FileResponse(image)
-
 
 @app.on_event("shutdown")
 def close():
