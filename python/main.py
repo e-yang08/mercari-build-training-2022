@@ -76,6 +76,7 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
     with open(image_path, 'wb') as image_file:
         image_file.write(image_contents)
 
+
     con = sqlite3.connect(sqlite_file)
     cur = con.cursor()
 
@@ -87,8 +88,9 @@ async def add_item(name: str = Form(...), category: str = Form(...), image: Uplo
         "SELECT category_id FROM category WHERE category_name = (?)", (category, ))
     category_id = cur.fetchone()[0]  # fetchone --> return (id,)
     # insert item
-    cur.execute("INSERT INTO items(name, category, image) VALUES(?,?,?)",
+    cur.execute("INSERT INTO items(name, category, image_filename) VALUES(?,?,?)",
                 (name, category, hashed_name))
+
     con.commit()
     con.close()
     return {f"message: item received: {name} in {category}"}
@@ -104,11 +106,17 @@ def get_item():
     # select all items
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category 
+        items.image_filename FROM items INNER JOIN category 
         ON category.category_id = items.category_id""")
-    items_json = {"items": cur.fetchall()}
+
+    lst = cur.fetchall()
     con.close()
 
+    if lst == []:
+        raise HTTPException(
+            status_code=404, detail="No item to list")
+
+    items_json = {"items": lst}
     return items_json
 
 
@@ -124,15 +132,16 @@ def search_item(keyword: str):  # query parameter
     # cur.execute("SELECT * from items WHERE name LIKE (?)", (f"%{keyword}%", ))
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category ON 
+        items.image_filename FROM items INNER JOIN category ON 
         category.category_id = items.category_id WHERE items.name LIKE (?)""", (f"%{keyword}%", ))
 
     lst = cur.fetchall()
     con.close()
     if lst == []:
-        message = {"message": "No matching item"}
-    else:
-        message = {"items": lst}
+        raise HTTPException(
+            status_code=404, detail="No matching item")
+
+    message = {"items": lst}
     return message
 
 
@@ -148,15 +157,14 @@ def get_item_by_id(items_id):
     # select item matching keyword
     cur.execute(
         """SELECT items.name, category.category_name as category, 
-        items.image FROM items INNER JOIN category 
+        items.image_filename FROM items INNER JOIN category 
         ON category.category_id = items.category_id WHERE id=(?)""", (items_id,))
     item = cur.fetchone()
     con.close()
     if item is None:
-        message = {"message": "No matching item"}
-    else:
-        message = item
-    return message
+        raise HTTPException(
+            status_code=404, detail="No matching item")
+    return item
 
 
 @app.get("/image/{image_filename}")
