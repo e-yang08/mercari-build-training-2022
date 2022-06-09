@@ -1,6 +1,6 @@
 # Build@Mercari Training Program 2022
 
-Participant individually created simple version of Mercari web application.
+Participant individually created simple version of Mercari web application. This repository includes my implementation (with some part from Step 5 branch built upon team's idea during Hackweek).
 
 
 ### Features and Demo
